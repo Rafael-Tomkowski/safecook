@@ -1,55 +1,23 @@
 import 'package:flutter/material.dart';
-import '../main.dart'; // importa o appTheme e prefsService
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../main.dart'; // appTheme e prefsService
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  void _revogarConsentimento(BuildContext context) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text('Revogar consentimento'),
-        content: const Text(
-            'Tem certeza que deseja revogar o consentimento? Você será redirecionado para o fluxo legal novamente.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Revogar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmar == true) {
-      await prefsService.clearLegalData();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Consentimento revogado.')),
-        );
-
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/policy',
-          (_) => false,
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    final loggedIn = prefsService.isLoggedIn();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configurações'),
       ),
       body: ListView(
         children: [
-          // 🔥 MODO ESCURO
+          // 🔥 Modo escuro
           SwitchListTile(
             title: const Text('Modo escuro'),
             subtitle: const Text('Aplicar tema escuro em todo o app'),
@@ -61,13 +29,43 @@ class SettingsPage extends StatelessWidget {
 
           const Divider(),
 
-          // 🔥 Revogação de consentimento (já existia)
-          ListTile(
-            leading: const Icon(Icons.lock_reset),
-            title: const Text('Revogar consentimento'),
-            subtitle: const Text('Você terá que aceitar as políticas novamente'),
-            onTap: () => _revogarConsentimento(context),
-          ),
+          // 👤 Se estiver logado, mostra info do usuário
+          if (loggedIn && user != null)
+            ListTile(
+              leading: const Icon(Icons.verified_user),
+              title: Text(user.email ?? 'Usuário logado'),
+              subtitle: const Text('Sessão ativa no Supabase'),
+            ),
+
+          // 🔐 Se NÃO estiver logado: mostrar Login / Conta
+          if (!loggedIn)
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Login / Conta'),
+              subtitle: const Text('Entrar ou criar uma conta no SafeCook'),
+              onTap: () {
+                Navigator.of(context).pushNamed('/login');
+              },
+            ),
+
+          // 🔓 Se estiver logado: mostrar Sair
+          if (loggedIn)
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Sair'),
+              subtitle: const Text('Encerrar sessão e voltar para o login'),
+              onTap: () async {
+                await supabase.auth.signOut();
+                await prefsService.setLoggedIn(false);
+
+                if (!context.mounted) return;
+
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              },
+            ),
         ],
       ),
     );

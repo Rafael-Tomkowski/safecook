@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/checklist/presentation/pages/checklist_list_page.dart';
+import '../main.dart'; // para usar prefsService
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -16,9 +18,36 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    final loggedIn = prefsService.isLoggedIn();
+
+    // 🔐 Se não estiver marcado como logado, manda pro login
+    if (!loggedIn) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      });
+
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('SafeCook'),
+        actions: [
+          IconButton(
+            tooltip: user?.email ?? 'Conta',
+            icon: const Icon(Icons.account_circle),
+            onPressed: () => _openSettings(context),
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(

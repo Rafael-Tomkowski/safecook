@@ -7,6 +7,8 @@ import 'screens/onboarding_page.dart';
 import 'screens/policy_page.dart';
 import 'screens/home_page.dart';
 import 'screens/settings_page.dart';
+import 'screens/login_page.dart';
+
 
 final prefsService = PrefsService();
 
@@ -96,10 +98,11 @@ class SafeCookApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: lightTheme,
           darkTheme: darkTheme,
-          themeMode: appTheme.themeMode, // <- aqui ele aplica o modo salvo
+          themeMode: appTheme.themeMode,
           initialRoute: '/',
           routes: {
             '/': (_) => const SplashPage(),
+            '/login': (_) => const LoginPage(),          // 👈 NOVA ROTA
             '/onboarding': (_) => const OnboardingPage(),
             '/policy': (_) => const PolicyPage(),
             '/home': (_) => const HomePage(),
