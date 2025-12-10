@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+import '../main.dart'; // importa o appTheme e prefsService
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  Future<void> _revokeConsent(BuildContext context) async {
-    final confirm = await showDialog<bool>(
+  void _revogarConsentimento(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('Revogar consentimento'),
         content: const Text(
-            'Isso vai limpar seu aceite e voltar ao fluxo inicial do app.'),
+            'Tem certeza que deseja revogar o consentimento? Você será redirecionado para o fluxo legal novamente.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancelar'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Revogar'),
           ),
@@ -24,13 +25,18 @@ class SettingsPage extends StatelessWidget {
       ),
     );
 
-    if (confirm == true) {
-      await prefsService.clearConsent();
+    if (confirmar == true) {
+      await prefsService.clearLegalData();
+
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Consentimento revogado')));
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/onboarding', (r) => false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Consentimento revogado.')),
+        );
+
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/policy',
+          (_) => false,
+        );
       }
     }
   }
@@ -38,28 +44,31 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Configurações')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Privacidade',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Aqui você pode revogar o consentimento.',
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              icon: const Icon(Icons.delete_forever),
-              label: const Text('Revogar consentimento'),
-              onPressed: () => _revokeConsent(context),
-            )
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text('Configurações'),
+      ),
+      body: ListView(
+        children: [
+          // 🔥 MODO ESCURO
+          SwitchListTile(
+            title: const Text('Modo escuro'),
+            subtitle: const Text('Aplicar tema escuro em todo o app'),
+            value: appTheme.isDark,
+            onChanged: (value) {
+              appTheme.setDarkMode(value);
+            },
+          ),
+
+          const Divider(),
+
+          // 🔥 Revogação de consentimento (já existia)
+          ListTile(
+            leading: const Icon(Icons.lock_reset),
+            title: const Text('Revogar consentimento'),
+            subtitle: const Text('Você terá que aceitar as políticas novamente'),
+            onTap: () => _revogarConsentimento(context),
+          ),
+        ],
       ),
     );
   }
