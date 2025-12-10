@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/prefs_service.dart';
 import 'screens/splash_page.dart';
 import 'screens/onboarding_page.dart';
@@ -10,7 +11,17 @@ final prefsService = PrefsService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 INICIALIZAÇÃO DO SUPABASE
+await Supabase.initialize(
+  url: 'https://tcjdvvwiyysvamraqtvm.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjamR2dndpeXlzdmFtcmFxdHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NjcxODcsImV4cCI6MjA4MDQ0MzE4N30.rbYnom59KmyIUTlqle5YxqqUKMDhPsSpgDHY5E9gTdo',
+);
+
+
+
   await prefsService.init();
+
   runApp(const SafeCookApp());
 }
 
@@ -29,7 +40,7 @@ class SafeCookApp extends StatelessWidget {
         seedColor: red,
         primary: red,
         secondary: gray,
-        background: cream,
+        surface: cream,
       ),
       scaffoldBackgroundColor: cream,
     );
