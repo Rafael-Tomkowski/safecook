@@ -14,6 +14,7 @@ class ChecklistEditPage extends StatefulWidget {
 class _ChecklistEditPageState extends State<ChecklistEditPage> {
   late TextEditingController titleCtrl;
   late TextEditingController descCtrl;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -22,12 +23,23 @@ class _ChecklistEditPageState extends State<ChecklistEditPage> {
     descCtrl = TextEditingController(text: widget.item.description);
   }
 
-  void _save() {
-    checklistRepository.update(
+  @override
+  void dispose() {
+    titleCtrl.dispose();
+    descCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+
+    await checklistRepository.update(
       widget.item.id,
-      titleCtrl.text,
-      descCtrl.text,
+      titleCtrl.text.trim(),
+      descCtrl.text.trim(),
     );
+
+    if (!mounted) return;
     Navigator.pop(context);
   }
 
@@ -50,8 +62,14 @@ class _ChecklistEditPageState extends State<ChecklistEditPage> {
             ),
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: _save,
-              child: const Text("Salvar"),
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text("Salvar"),
             ),
           ],
         ),

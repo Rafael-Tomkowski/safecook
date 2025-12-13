@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/prefs_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
-
-
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -19,8 +17,19 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _decideRoute() async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 600));
 
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    // 1) Sem login -> login
+    if (user == null) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/login');
+      return;
+    }
+
+    // 2) Logado, mas sem aceitar políticas -> onboarding
     final accepted = prefsService.policiesVersionAccepted;
     if (accepted == 'v1') {
       if (!mounted) return;
@@ -33,21 +42,19 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.checklist, size: 80, color: Color(0xFFEF4444)),
-            const SizedBox(height: 16),
+            Icon(Icons.checklist, size: 80, color: Color(0xFFEF4444)),
+            SizedBox(height: 16),
             Text(
               'SafeCook',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const Text('Segurança na cozinha, sem erro.'),
+            SizedBox(height: 8),
+            Text('Segurança na cozinha, sem erro.'),
           ],
         ),
       ),

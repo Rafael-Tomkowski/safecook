@@ -9,7 +9,6 @@ import 'screens/home_page.dart';
 import 'screens/settings_page.dart';
 import 'screens/login_page.dart';
 
-
 final prefsService = PrefsService();
 
 // Controlador global de tema
@@ -23,7 +22,6 @@ class AppTheme extends ChangeNotifier {
 
   void setDarkMode(bool isDark) {
     themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    // salva preferência
     prefsService.setDarkMode(isDark);
     notifyListeners();
   }
@@ -35,14 +33,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-url: 'https://tcjdvvwiyysvamraqtvm.supabase.co', // sua URL
+    url: 'https://tcjdvvwiyysvamraqtvm.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjamR2dndpeXlzdmFtcmFxdHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NjcxODcsImV4cCI6MjA4MDQ0MzE4N30.rbYnom59KmyIUTlqle5YxqqUKMDhPsSpgDHY5E9gTdo', // cole aqui a anon public key completa
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjamR2dndpeXlzdmFtcmFxdHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NjcxODcsImV4cCI6MjA4MDQ0MzE4N30.rbYnom59KmyIUTlqle5YxqqUKMDhPsSpgDHY5E9gTdo',
   );
 
   await prefsService.init();
 
-  // lê da persistência qual foi o último tema usado
   final isDark = prefsService.isDarkMode();
   appTheme = AppTheme(isDark: isDark);
 
@@ -80,7 +77,7 @@ class SafeCookApp extends StatelessWidget {
         seedColor: red,
         primary: red,
         secondary: cream,
-        surface: Color(0xFF020617),
+        surface: const Color(0xFF020617),
         brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: const Color(0xFF020617),
@@ -102,7 +99,7 @@ class SafeCookApp extends StatelessWidget {
           initialRoute: '/',
           routes: {
             '/': (_) => const SplashPage(),
-            '/login': (_) => const LoginPage(),          // 👈 NOVA ROTA
+            '/login': (_) => const LoginPage(),
             '/onboarding': (_) => const OnboardingPage(),
             '/policy': (_) => const PolicyPage(),
             '/home': (_) => const HomePage(),

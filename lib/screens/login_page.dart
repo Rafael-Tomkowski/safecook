@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../main.dart'; // para usar prefsService
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -13,6 +11,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _loading = false;
   String? _error;
 
@@ -37,31 +36,20 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text,
       );
 
-      // se deu certo, marca como logado
-      await prefsService.setLoggedIn(true);
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login realizado com sucesso')),
       );
 
-      // Volta pro fluxo normal
+      // volta pro fluxo normal (Splash decide)
       Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     } on AuthException catch (e) {
-      setState(() {
-        _error = e.message;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Erro inesperado ao entrar. Tente novamente.';
-      });
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Erro inesperado ao entrar. Tente novamente.');
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -81,25 +69,15 @@ class _LoginPageState extends State<LoginPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Conta criada. Agora faça login com seu email e senha.',
-          ),
+          content: Text('Conta criada. Agora faça login com seu email e senha.'),
         ),
       );
     } on AuthException catch (e) {
-      setState(() {
-        _error = e.message;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Erro inesperado ao criar conta. Tente novamente.',
-      });
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Erro inesperado ao criar conta. Tente novamente.');
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -149,9 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                   if (_error != null) ...[
                     Text(
                       _error!,
-                      style: TextStyle(
-                        color: theme.colorScheme.error,
-                      ),
+                      style: TextStyle(color: theme.colorScheme.error),
                     ),
                     const SizedBox(height: 8),
                   ],

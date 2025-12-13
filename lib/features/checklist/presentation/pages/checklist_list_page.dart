@@ -12,52 +12,72 @@ class ChecklistListPage extends StatefulWidget {
 
 class _ChecklistListPageState extends State<ChecklistListPage> {
   bool _loading = true;
+  bool _syncing = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _load();
   }
 
-Future<void> _loadData() async {
-  try {
-    await checklistRepository.load();
-  } catch (e, st) {
-    // Vai aparecer no console do Flutter (Debug Console)
-    // pra você ver o erro real vindo do Supabase
-    // ignore: avoid_print
-    print('Erro ao carregar checklist: $e');
-    // ignore: avoid_print
-    print(st);
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+    });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erro ao carregar checklist. Verifique o console.'),
-        ),
-      );
-    }
-  } finally {
-    if (mounted) {
-      setState(() {
-        _loading = false;
-      });
+    try {
+      await checklistRepository.load();
+    } catch (e) {
+      // ignore: avoid_print
+      print('Erro ao carregar checklist: $e');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Falha ao carregar.')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
-}
 
-  void _openDialog(ChecklistItem item) async {
+  Future<void> _syncNow() async {
+    setState(() => _syncing = true);
+    try {
+      await checklistRepository.sync();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sincronizado.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sem internet ou erro ao sincronizar.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _openDialog(ChecklistItem item) async {
     await showDialog(
       context: context,
-      barrierDismissible: false, // recomendado pelo professor
+      barrierDismissible: false,
       builder: (_) => ChecklistDialog(item: item),
     );
-    setState(() {}); // atualizar lista depois de editar/remover
+    if (mounted) setState(() {});
   }
 
-  void _createItem() async {
-    final controller = TextEditingController();
-    final descController = TextEditingController();
+  Future<void> _createItem() async {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
 
     await showDialog(
       context: context,
@@ -68,11 +88,11 @@ Future<void> _loadData() async {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: controller,
+              controller: titleCtrl,
               decoration: const InputDecoration(labelText: "Título"),
             ),
             TextField(
-              controller: descController,
+              controller: descCtrl,
               decoration: const InputDecoration(labelText: "Descrição"),
             ),
           ],
@@ -84,12 +104,14 @@ Future<void> _loadData() async {
           ),
           FilledButton(
             onPressed: () async {
-              await checklistRepository.create(
-                controller.text,
-                descController.text,
-              );
+              final title = titleCtrl.text.trim();
+              final desc = descCtrl.text.trim();
+              if (title.isEmpty) return;
+
+              await checklistRepository.create(title, desc);
+
               if (context.mounted) Navigator.pop(context);
-              setState(() {});
+              if (mounted) setState(() {});
             },
             child: const Text("Criar"),
           )
@@ -100,45 +122,65 @@ Future<void> _loadData() async {
 
   @override
   Widget build(BuildContext context) {
-  if (_loading) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text("Checklist"),
-    ),
-    body: const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
-}
-
-    final items = checklistRepository.getAll();
+    final items = checklistRepository.getAllVisible();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Checklist"),
+        actions: [
+          IconButton(
+            tooltip: 'Sincronizar agora',
+            onPressed: _syncing ? null : _syncNow,
+            icon: _syncing
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createItem,
         child: const Icon(Icons.add),
       ),
-      body: items.isEmpty
-          ? const Center(
-              child: Text(
-                "Nenhum item criado ainda.\nToque no botão + para adicionar.",
-                textAlign: TextAlign.center,
-              ),
-            )
-          : ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (_, i) {
-                final item = items[i];
-                return ListTile(
-                  title: Text(item.title),
-                  subtitle: Text(item.description),
-                  onTap: () => _openDialog(item),
-                );
-              },
-            ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : items.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Nenhum item criado ainda.\nToque no botão + para adicionar.",
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _syncing ? null : _syncNow,
+                        icon: const Icon(Icons.sync),
+                        label: const Text('Tentar sincronizar'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    await _syncNow();
+                  },
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (_, i) {
+                      final item = items[i];
+                      return ListTile(
+                        title: Text(item.title),
+                        subtitle: Text(item.description),
+                        onTap: () => _openDialog(item),
+                      );
+                    },
+                  ),
+                ),
     );
   }
 }

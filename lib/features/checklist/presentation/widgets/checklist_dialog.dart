@@ -26,14 +26,14 @@ class ChecklistDialog extends StatelessWidget {
                 builder: (_) => ChecklistEditPage(item: item),
               ),
             );
-            Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
           },
           child: const Text("Editar"),
         ),
         FilledButton(
-          onPressed: () {
-            checklistRepository.delete(item.id);
-            Navigator.pop(context);
+          onPressed: () async {
+            await checklistRepository.delete(item.id);
+            if (context.mounted) Navigator.pop(context);
           },
           child: const Text("Remover"),
         ),
