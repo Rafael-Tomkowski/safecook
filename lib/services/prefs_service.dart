@@ -6,12 +6,24 @@ class PrefsService {
   static const String keyPoliciesVersionAccepted = 'policies_version_accepted';
   static const String keyAcceptedAt = 'accepted_at';
   static const String keyOnboardingCompleted = 'onboarding_completed';
-  static const String _darkModeKey = 'dark_mode_enabled';
+  static const _darkModeKey = 'dark_mode_enabled';
+  static const _loggedInKey = 'logged_in';
 
   late SharedPreferences _prefs;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+  }
+
+  // Helpers genéricos (novo) — usados pelo AvatarService
+  String? getString(String key) => _prefs.getString(key);
+
+  Future<void> setString(String key, String value) async {
+    await _prefs.setString(key, value);
+  }
+
+  Future<void> remove(String key) async {
+    await _prefs.remove(key);
   }
 
   // Tema
@@ -21,15 +33,24 @@ class PrefsService {
     await _prefs.setBool(_darkModeKey, value);
   }
 
+  // Login flag (do seu app)
+  bool isLoggedIn() => _prefs.getBool(_loggedInKey) ?? false;
+
+  Future<void> setLoggedIn(bool value) async {
+    await _prefs.setBool(_loggedInKey, value);
+  }
+
   // Onboarding
-  bool get onboardingCompleted => _prefs.getBool(keyOnboardingCompleted) ?? false;
+  bool get onboardingCompleted =>
+      _prefs.getBool(keyOnboardingCompleted) ?? false;
 
   Future<void> setOnboardingCompleted(bool value) async {
     await _prefs.setBool(keyOnboardingCompleted, value);
   }
 
   // Políticas
-  String? get policiesVersionAccepted => _prefs.getString(keyPoliciesVersionAccepted);
+  String? get policiesVersionAccepted =>
+      _prefs.getString(keyPoliciesVersionAccepted);
 
   Future<void> setPoliciesAccepted(String version) async {
     await _prefs.setString(keyPoliciesVersionAccepted, version);
@@ -53,5 +74,13 @@ class PrefsService {
     await _prefs.remove(keyPoliciesVersionAccepted);
     await _prefs.remove(keyAcceptedAt);
     await _prefs.remove(keyOnboardingCompleted);
+  }
+
+  Future<void> clearLegalData() async {
+    await _prefs.remove('privacy_read_v1');
+    await _prefs.remove('terms_read_v1');
+    await _prefs.remove('policies_version_accepted');
+    await _prefs.remove('accepted_at');
+    await _prefs.remove('onboarding_completed');
   }
 }

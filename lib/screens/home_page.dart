@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../features/checklist/presentation/pages/checklist_list_page.dart';
+import '../features/checklist/presentation/widgets/user_drawer_header.dart';
+import '../features/checklist/presentation/widgets/profile_appbar_button.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -20,21 +23,21 @@ class HomePage extends StatelessWidget {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
-    // Se não estiver logado, manda pro login
     if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
       });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('SafeCook'),
         actions: [
-          IconButton(
-            tooltip: user.email ?? 'Conta',
-            icon: const Icon(Icons.account_circle),
+          ProfileAppBarButton(
             onPressed: () => _openSettings(context),
           ),
         ],
@@ -42,17 +45,7 @@ class HomePage extends StatelessWidget {
       drawer: Drawer(
         child: ListView(
           children: [
-            const DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.kitchen, size: 48),
-                  SizedBox(height: 8),
-                  Text('SafeCook', style: TextStyle(fontSize: 20)),
-                  Text('Segurança na cozinha'),
-                ],
-              ),
-            ),
+            const UserDrawerHeader(),
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Início'),
@@ -87,7 +80,11 @@ class HomePage extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.rice_bowl, size: 48, color: Color(0xFFEF4444)),
+                    const Icon(
+                      Icons.rice_bowl,
+                      size: 48,
+                      color: Color(0xFFEF4444),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -95,10 +92,15 @@ class HomePage extends StatelessWidget {
                         children: [
                           const Text(
                             'Primeiros passos: Arroz sem erro',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          const Text('Comece praticando um preparo simples com um checklist organizado.'),
+                          const Text(
+                            'Comece praticando um preparo simples com um checklist organizado.',
+                          ),
                           const SizedBox(height: 12),
                           FilledButton.icon(
                             onPressed: () => _openChecklist(context),
@@ -119,7 +121,11 @@ class HomePage extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.shield_moon, size: 40, color: Color(0xFF374151)),
+                    const Icon(
+                      Icons.shield_moon,
+                      size: 40,
+                      color: Color(0xFF374151),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -127,7 +133,10 @@ class HomePage extends StatelessWidget {
                         children: const [
                           Text(
                             'Dicas rápidas de segurança',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           SizedBox(height: 8),
                           Text('• Não deixe panelas no fogo sem supervisão.'),

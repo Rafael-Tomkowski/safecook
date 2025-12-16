@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../main.dart';
 
 class SplashPage extends StatefulWidget {
@@ -17,19 +18,17 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _decideRoute() async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 800));
 
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
-
-    // 1) Sem login -> login
+    // ✅ Fonte da verdade do login: Supabase
+    final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/login');
       return;
     }
 
-    // 2) Logado, mas sem aceitar políticas -> onboarding
+    // ✅ Políticas/Onboarding continuam como já estavam
     final accepted = prefsService.policiesVersionAccepted;
     if (accepted == 'v1') {
       if (!mounted) return;
@@ -42,19 +41,21 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.checklist, size: 80, color: Color(0xFFEF4444)),
-            SizedBox(height: 16),
+            const Icon(Icons.checklist, size: 80, color: Color(0xFFEF4444)),
+            const SizedBox(height: 16),
             Text(
               'SafeCook',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            SizedBox(height: 8),
-            Text('Segurança na cozinha, sem erro.'),
+            const SizedBox(height: 8),
+            const Text('Segurança na cozinha, sem erro.'),
           ],
         ),
       ),
